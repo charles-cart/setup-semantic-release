@@ -17,9 +17,15 @@ npm install --save-dev husky
 
 # 2. Configurar Husky
 echo "🪝 Configurando Husky..."
-npx husky install
-npx husky add .husky/commit-msg 'npx --no -- commitlint --edit ${1}'
-npx husky add .husky/pre-commit 'npm run lint && npm run test'
+npx husky init
+
+# Crear hook de commit-msg
+echo 'npx --no -- commitlint --edit $1' > .husky/commit-msg
+chmod +x .husky/commit-msg
+
+# Crear hook de pre-commit (opcional - comentado porque puede no tener lint/test)
+# echo 'npm run lint && npm run test' > .husky/pre-commit
+# chmod +x .husky/pre-commit
 
 # 3. Crear archivos de configuración
 echo "⚙️ Creando archivos de configuración..."
@@ -102,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Necesario para semantic-release
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - uses: actions/setup-node@v4
@@ -113,6 +119,24 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx semantic-release
+
+  refresh-staging:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge master branch into staging # update branch staging
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout staging
+          git pull origin master --no-ff --no-edit
+          git push origin staging
 EOF
 
 # 6. Actualizar package.json con scripts
@@ -120,19 +144,6 @@ echo "📝 Actualizando package.json..."
 npm pkg set scripts.release="semantic-release"
 npm pkg set scripts.release:dry-run="semantic-release --dry-run"
 npm pkg set scripts.prepare="husky install"
-
-# 7. Crear CHANGELOG.md inicial si no existe
-if [ ! -f CHANGELOG.md ]; then
-    echo "📄 Creando CHANGELOG.md inicial..."
-    cat > CHANGELOG.md << 'EOF'
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-EOF
-fi
 
 echo "✅ ¡Configuración completada!"
 echo ""
