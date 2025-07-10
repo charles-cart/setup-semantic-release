@@ -119,6 +119,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx semantic-release
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   refresh-staging:
     needs: release
