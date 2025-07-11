@@ -69,19 +69,27 @@ module.exports = {
         changelogFile: 'CHANGELOG.md',
       },
     ],
-    [
-      '@semantic-release/npm',
-      {
-        npmPublish: false,
-      },
-    ],
-    [
-      '@semantic-release/git',
-      {
-        assets: ['CHANGELOG.md', 'package.json'],
-        message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
-      },
-    ],
+    // Plugin semantic-release/npm: Actualiza versión en package.json y opcionalmente publica en npm
+    // Úsalo si: necesitas publicar en npm O quieres versión actualizada en package.json
+    // Comentado porque sin @semantic-release/git los cambios no se pushean al repo
+    // [
+    //   '@semantic-release/npm',
+    //   {
+    //     npmPublish: false, // true si quieres publicar en npm registry
+    //   },
+    // ],
+    // Plugin semantic-release/git: Hace commit automático de archivos modificados (CHANGELOG.md, package.json)
+    // Ofrece: Historial completo de cambios pusheados al repo + versiones actualizadas
+    // Comentado porque causa conflictos con reglas de protección de rama
+    // Para activarlo: Configurar excepciones en GitHub para 'github-actions[bot]' 
+    // O usar Personal Access Token con permisos especiales en secrets.RELEASE_TOKEN
+    // [
+    //   '@semantic-release/git',
+    //   {
+    //     assets: ['CHANGELOG.md', 'package.json'],
+    //     message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+    //   },
+    // ],
     '@semantic-release/github',
   ],
 };
